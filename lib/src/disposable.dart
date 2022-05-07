@@ -2,6 +2,44 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:meta/meta.dart';
 
+abstract class IInitable {
+  @mustCallSuper
+  void init();
+}
+
+abstract class IInitAndDispose implements IInitable, IDisposable {
+  static T create<T extends IInitAndDispose>(
+    T Function() factory, {
+    bool init = true,
+  }) {
+    final object = factory();
+    if (init) {
+      object.init();
+    }
+    return object;
+  }
+}
+
+class IDisposableAlreadyDisposedException implements Exception {
+  final IDisposable? disposed;
+
+  const IDisposableAlreadyDisposedException(this.disposed);
+  static T checkNotDisposed<T>(
+    T object,
+  ) =>
+      object is IDisposable
+          ? object.wasDisposed
+              ? (throw IDisposableAlreadyDisposedException(object))
+              : object
+          : object;
+
+  @override
+  String toString() =>
+      '$runtimeType: The object $disposed was already disposed before usage';
+}
+
+class IInitAndDisposeBase = Object with IInitableMixin, IDisposableMixin;
+
 abstract class IDisposable {
   bool get wasDisposed;
   @mustCallSuper
@@ -38,7 +76,12 @@ abstract class IDisposable {
       onFail();
     }
   }
+
+  /// Return a [IDisposable] that does not do anything.
+  static IDisposable none() => _NoneIDisposable();
 }
+
+class _NoneIDisposable extends IDisposableBase {}
 
 class MergingIDisposable extends IDisposableBase {
   final List<Object> _disposables;
@@ -56,7 +99,17 @@ class MergingIDisposable extends IDisposableBase {
   }
 }
 
-class IDisposableBase = Object with IDisposableMixin;
+abstract class IDisposableBase = Object with IDisposableMixin;
+
+mixin IInitableMixin implements IInitable {
+  bool _wasInited = false;
+
+  @override
+  void init() {
+    assert(!_wasInited);
+    _wasInited = true;
+  }
+}
 
 mixin IDisposableMixin implements IDisposable {
   bool _wasDisposed = false;

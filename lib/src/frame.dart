@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
-import 'package:value_notifier/value_notifier.dart';
+import 'package:meta/meta.dart';
+import 'package:value_notifier/src/disposable.dart';
 
 class ValueNotifierOwnershipChain {
   final List<ValueNotifierOwnershipFrame> _frames;
@@ -42,6 +43,68 @@ class ValueNotifierOwnershipChain {
   }
 }
 
+class BaseAlreadyDisposedException<T extends Listenable> implements Exception {
+  final T? debugDisposedBase;
+  final DebugValueNotifierOwnershipChainMember self;
+
+  const BaseAlreadyDisposedException(this.debugDisposedBase, this.self);
+  static T checkNotDisposed<T extends Listenable>(
+    T? base,
+    T? debugDisposedBase,
+    DebugValueNotifierOwnershipChainMember self,
+  ) =>
+      base ??
+      (throw BaseAlreadyDisposedException<T>(
+        debugDisposedBase,
+        self,
+      ));
+
+  @override
+  String toString() =>
+      '$runtimeType: The base for $self, $debugDisposedBase, was already disposed';
+}
+
+class TraceableValueNotifierException implements Exception {
+  final Object error;
+  final StackTrace? stackTrace;
+  final DebugValueNotifierOwnershipChainMember source;
+  final DebugValueNotifierOwnershipChainMember lastTarget;
+
+  TraceableValueNotifierException(
+    this.error,
+    this.stackTrace,
+    this.source,
+    this.lastTarget,
+  );
+
+  static T tryReturn<T>(
+      T Function() fn, DebugValueNotifierOwnershipChainMember self) {
+    try {
+      return fn();
+    } on TraceableValueNotifierException catch (e) {
+      throw TraceableValueNotifierException(
+        e.error,
+        e.stackTrace,
+        e.source,
+        self,
+      );
+    } on Object catch (e, s) {
+      throw TraceableValueNotifierException(
+        e,
+        s,
+        self,
+        self,
+      );
+    }
+  }
+
+  @override
+  String toString() => 'TraceableValueNotifierException: $error at $source.\n'
+      'The stackTrace was $stackTrace\n'
+      'The last target was $lastTarget\n'
+      'The Value notifier chain was ${ValueNotifierOwnershipChain.walkFrom(lastTarget)}\n';
+}
+
 abstract class DebugValueNotifierOwnershipChainMember {
   @visibleForTesting
   ValueNotifierOwnershipFrame get debugOwnershipChainFrame;
@@ -55,6 +118,11 @@ abstract class ValueNotifierOwnershipFrame {
     String typename, [
     bool ownsChildren,
   ]) = _ValueNotifierOwnershipFrame;
+  const factory ValueNotifierOwnershipFrame.handle(
+    Object object,
+    String typename, [
+    bool ownsChildren,
+  ]) = _ValueNotifierOwnershipElidedFrame;
 }
 
 class _ValueNotifierOwnershipEndFrame implements ValueNotifierOwnershipFrame {
@@ -78,4 +146,28 @@ class _ValueNotifierOwnershipFrame implements ValueNotifierOwnershipFrame {
 
   String toString() =>
       '$typename#${object.hashCode.toRadixString(16)}[`$object`]';
+}
+
+class _ValueNotifierOwnershipElidedFrame
+    implements ValueNotifierOwnershipFrame {
+  final Object object;
+  final String typename;
+  final bool ownsChild;
+
+  const _ValueNotifierOwnershipElidedFrame(
+    this.object,
+    this.typename, [
+    this.ownsChild = true,
+  ]);
+
+  String toString() =>
+      '$typename#${object.hashCode.toRadixString(16)}[`$object`]';
+}
+
+String valueToStringOrUndefined(ValueListenable<Object?> valueListenable) {
+  try {
+    return valueListenable.value.toString();
+  } on Object {
+    return 'undefined';
+  }
 }

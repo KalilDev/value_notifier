@@ -5,23 +5,21 @@ import 'package:value_notifier/src/disposable.dart';
 import 'frame.dart';
 import 'idisposable_change_notifier.dart';
 import 'own_handle.dart';
-
-typedef Predicate<T> = bool Function(T);
+import 'where.dart';
 
 /// An [ValueListenable] which filters the notifications according to the
-/// provided [Predicate], discarding the non-conforming values
-class WhereValueListenable<T> extends IDisposableValueNotifier<T?>
+/// provided [Predicate], keeping the previous value that complies with it.
+class WhereKeepingPreviousValueListenable<T> extends IDisposableValueNotifier<T>
     implements DebugValueNotifierOwnershipChainMember {
   final Predicate<T> _predicate;
   final ValueListenableOwnHandle<T> _base;
-  final T? onFalse;
-
-  WhereValueListenable(
+  final T Function() initial;
+  WhereKeepingPreviousValueListenable(
     ValueListenable<T> base,
     this._predicate, {
-    this.onFalse,
+    required this.initial,
   })  : _base = ValueListenableOwnHandle(base),
-        super(_predicate(base.value) ? base.value : onFalse);
+        super(_predicate(base.value) ? base.value : initial());
 
   bool _didListenToBase = false;
   void _maybeListenToBase() {
@@ -34,7 +32,6 @@ class WhereValueListenable<T> extends IDisposableValueNotifier<T?>
 
   void _onBase() {
     if (!_predicate(_base.value)) {
-      value = onFalse;
       return;
     }
     value = _base.value;
@@ -60,9 +57,9 @@ class WhereValueListenable<T> extends IDisposableValueNotifier<T?>
 
   @override
   ValueNotifierOwnershipFrame get debugOwnershipChainFrame =>
-      ValueNotifierOwnershipFrame(this, 'WhereValueListenable');
+      ValueNotifierOwnershipFrame(this, 'WhereKeepingPreviousValueListenable');
 
   @override
   String toString() =>
-      '$_base.where($_predicate}){${valueToStringOrUndefined(this)}}';
+      '$_base.whereKeepingPrevious($_predicate, initial: $initial){${valueToStringOrUndefined(this)}}';
 }

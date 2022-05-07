@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:value_notifier/src/disposable.dart';
+import 'package:value_notifier/src/handle.dart';
 
 /// An [ValueListenableBuilder] which takes ownership of the passed
 /// [valueListenable], disposing it when done.
@@ -31,13 +32,16 @@ class _OwnValueListenableBuilderState<T>
   @override
   void initState() {
     super.initState();
-    value = widget.valueListenable.value;
+    value = IDisposableAlreadyDisposedException.checkNotDisposed(
+      widget.valueListenable,
+    ).value;
     widget.valueListenable.addListener(_valueChanged);
   }
 
   @override
   void didUpdateWidget(OwnValueListenableBuilder<T> oldWidget) {
-    if (oldWidget.valueListenable != widget.valueListenable) {
+    if (!ValueListenableHandle.refersToTheSameBase(
+        widget.valueListenable, oldWidget.valueListenable)) {
       IDisposable.tryDispose(oldWidget.valueListenable, () {
         assert(() {
           print(
@@ -50,6 +54,8 @@ class _OwnValueListenableBuilderState<T>
       });
       value = widget.valueListenable.value;
       widget.valueListenable.addListener(_valueChanged);
+    } else if (widget.valueListenable != oldWidget.valueListenable) {
+      print('Saved an dispose');
     }
     super.didUpdateWidget(oldWidget);
   }

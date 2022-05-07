@@ -37,7 +37,8 @@ class TappedValueListenable<T> extends IDisposableValueListenable<T>
   void removeListener(VoidCallback listener) => _base.removeListener(listener);
 
   @override
-  T get value => _base.value;
+  T get value =>
+      TraceableValueNotifierException.tryReturn(() => _base.value, this);
 
   @override
   bool get wasDisposed => _base.wasDisposed;
@@ -48,4 +49,8 @@ class TappedValueListenable<T> extends IDisposableValueListenable<T>
   @override
   ValueNotifierOwnershipFrame get debugOwnershipChainFrame =>
       ValueNotifierOwnershipFrame(this, 'TappedValueListenable');
+
+  @override
+  String toString() =>
+      '$_base.tap($_callback){${valueToStringOrUndefined(this)}}';
 }

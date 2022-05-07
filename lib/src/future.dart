@@ -9,11 +9,22 @@ import 'idisposable_change_notifier.dart';
 
 /// An [ValueListenable] which takes an [Future] and notifies the completed value
 /// and throws when it fails.
-class FutureValueListenable<T> extends IDisposableValueNotifier<T?>
+class FutureValueListenable<T>
+    extends IDisposableValueNotifier<AsyncSnapshot<T>>
     implements DebugValueNotifierOwnershipChainMember {
   final Future<T> _future;
 
-  FutureValueListenable(this._future) : super(null);
+  FutureValueListenable(
+    this._future, {
+    bool eager = false,
+  }) : super(eager
+            ? const AsyncSnapshot.waiting()
+            : const AsyncSnapshot.nothing()) {
+    if (eager) {
+      _maybeListenToFuture();
+    }
+  }
+
   bool _didListenToFuture = false;
 
   void _maybeListenToFuture() {
@@ -21,8 +32,11 @@ class FutureValueListenable<T> extends IDisposableValueNotifier<T?>
       return;
     }
     _didListenToFuture = true;
+    _setValue(value.inState(ConnectionState.waiting));
     _future.then(_onValue).catchError(_onError);
   }
+
+  void listenToFuture() => _maybeListenToFuture();
 
   @override
   void addListener(VoidCallback listener) {
@@ -32,15 +46,31 @@ class FutureValueListenable<T> extends IDisposableValueNotifier<T?>
 
   bool _disposed = false;
 
-  void _onValue(T value) {
+  void _onValue(T result) {
     if (_disposed) {
       return;
     }
-    this.value = value;
+    _setValue(AsyncSnapshot.withData(
+      ConnectionState.done,
+      result,
+    ));
+  }
+
+  void _setValue(AsyncSnapshot<T> value) {
+    super.value = value;
+  }
+
+  @override
+  set value(AsyncSnapshot<T> newValue) {
+    throw StateError('protected member!');
   }
 
   void _onError(Object error, [StackTrace? trace]) {
-    Error.throwWithStackTrace(error, trace ?? StackTrace.current);
+    _setValue(AsyncSnapshot.withError(
+      ConnectionState.done,
+      error,
+      trace ?? StackTrace.current,
+    ));
   }
 
   @override
@@ -59,4 +89,8 @@ class FutureValueListenable<T> extends IDisposableValueNotifier<T?>
   @override
   ValueNotifierOwnershipFrame get debugOwnershipChainFrame =>
       ValueNotifierOwnershipFrame(this, 'FutureValueListenable');
+
+  @override
+  String toString() =>
+      '$_future.toValueListenable(){${valueToStringOrUndefined(this)}}';
 }

@@ -25,7 +25,8 @@ class SingleValueListenable<T> extends IDisposableValueListenable<T>
   }
 
   @override
-  T get value => _value as T;
+  T get value =>
+      TraceableValueNotifierException.tryReturn(() => _value as T, this);
 
   @override
   bool get wasDisposed => _wasDisposed;
@@ -36,4 +37,8 @@ class SingleValueListenable<T> extends IDisposableValueListenable<T>
   @override
   ValueNotifierOwnershipFrame get debugOwnershipChainFrame =>
       ValueNotifierOwnershipFrame(this, 'SingleValueListenable');
+
+  @override
+  String toString() =>
+      '$value.toValueListenable(){${valueToStringOrUndefined(this)}}';
 }

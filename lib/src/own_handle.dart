@@ -56,6 +56,7 @@ class ListenableOwnHandle extends IDisposableListenable
     assert(() {
       _debugOwner[_base!] = null;
       _debugDisposedBase = _base;
+      //print('disposed $_base');
       return true;
     }());
     _base = null;
@@ -69,7 +70,7 @@ class ListenableOwnHandle extends IDisposableListenable
 
   @override
   ValueNotifierOwnershipFrame get debugOwnershipChainFrame =>
-      ValueNotifierOwnershipFrame(this, 'ListenableOwnHandle');
+      ValueNotifierOwnershipFrame.handle(this, 'ListenableOwnHandle');
 }
 
 /// An handle to an [ValueListenable] which takes ownership of the object,
@@ -77,14 +78,24 @@ class ListenableOwnHandle extends IDisposableListenable
 class ValueListenableOwnHandle<T> extends ListenableOwnHandle
     implements IDisposableValueListenable<T> {
   @override
-  ValueListenable<T>? get base => super.base as ValueListenable<T>;
+  ValueListenable<T>? get base => super.base as ValueListenable<T>?;
 
   ValueListenableOwnHandle(ValueListenable<T> base) : super(base);
 
   @override
-  T get value => base!.value;
+  T get value => TraceableValueNotifierException.tryReturn(
+      () => BaseAlreadyDisposedException.checkNotDisposed(
+            base,
+            _debugDisposedBase as ValueListenable<T>?,
+            this,
+          ).value,
+      this);
 
   @override
   ValueNotifierOwnershipFrame get debugOwnershipChainFrame =>
       ValueNotifierOwnershipFrame(this, 'ValueListenableOwnHandle');
+
+  @override
+  String toString() =>
+      '${_debugDisposedBase ?? _base}.takeOwnership(){${valueToStringOrUndefined(this)}}';
 }

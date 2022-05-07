@@ -51,7 +51,8 @@ class ProxyValueListenable<T> extends IDisposableChangeNotifier
   }
 
   @override
-  T get value => _base.value;
+  T get value =>
+      TraceableValueNotifierException.tryReturn(() => _base.value, this);
 
   @override
   bool get wasDisposed => _base.wasDisposed;
@@ -62,4 +63,8 @@ class ProxyValueListenable<T> extends IDisposableChangeNotifier
   @override
   ValueNotifierOwnershipFrame get debugOwnershipChainFrame =>
       ValueNotifierOwnershipFrame(_base, 'ProxyValueListenable');
+
+  @override
+  String toString() =>
+      '${objectRuntimeType(this, 'ProxyValueListenable<T>')}{$_base}{${valueToStringOrUndefined(this)}}';
 }

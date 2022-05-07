@@ -25,7 +25,8 @@ class MappedValueListenable<T, T1>
   void removeListener(VoidCallback listener) => _base.removeListener(listener);
 
   @override
-  T1 get value => _mapper(_base.value);
+  T1 get value => TraceableValueNotifierException.tryReturn(
+      () => _mapper(_base.value), this);
 
   @override
   void dispose() {
@@ -41,4 +42,8 @@ class MappedValueListenable<T, T1>
   @override
   ValueNotifierOwnershipFrame get debugOwnershipChainFrame =>
       ValueNotifierOwnershipFrame(this, 'MappedValueListenable');
+
+  @override
+  String toString() =>
+      '$_base.where($_mapper}){${valueToStringOrUndefined(this)}}';
 }

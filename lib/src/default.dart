@@ -23,7 +23,8 @@ class DefaultValueListenable<T> extends IDisposableValueListenable<T>
   void removeListener(VoidCallback listener) => _base.removeListener(listener);
 
   @override
-  T get value => _base.value ?? _defaultValue;
+  T get value => TraceableValueNotifierException.tryReturn(
+      () => _base.value ?? _defaultValue, this);
 
   @override
   void dispose() => _base.dispose();
@@ -37,4 +38,8 @@ class DefaultValueListenable<T> extends IDisposableValueListenable<T>
   @override
   ValueNotifierOwnershipFrame get debugOwnershipChainFrame =>
       ValueNotifierOwnershipFrame(this, 'DefaultValueListenable');
+
+  @override
+  String toString() =>
+      '$_base.withDefault($_defaultValue){${valueToStringOrUndefined(this)}}';
 }

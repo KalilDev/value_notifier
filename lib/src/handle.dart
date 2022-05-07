@@ -11,6 +11,8 @@ class ListenableHandle extends ChangeNotifier
 
   ListenableHandle(Listenable base) : _base = base;
 
+  Listenable? _debugDisposedBase;
+
   bool _didListen = false;
   @override
   void addListener(VoidCallback listener) {
@@ -65,6 +67,10 @@ class ListenableHandle extends ChangeNotifier
       }
       _didListen = false;
     }
+    assert(() {
+      _debugDisposedBase = _base;
+      return true;
+    }());
     _base = null;
     super.dispose();
   }
@@ -73,11 +79,12 @@ class ListenableHandle extends ChangeNotifier
   bool get wasDisposed => _base == null;
 
   @override
-  Object get debugOwnershipChainChild => _base!;
+  Object get debugOwnershipChainChild =>
+      kDebugMode ? (_debugDisposedBase ?? _base!) : _base!;
 
   @override
   ValueNotifierOwnershipFrame get debugOwnershipChainFrame =>
-      ValueNotifierOwnershipFrame(this, 'ListenableHandle', false);
+      ValueNotifierOwnershipFrame.handle(this, 'ListenableHandle', false);
 }
 
 /// An handle to an [ValueListenable] which does not take the ownership of the
@@ -87,9 +94,36 @@ class ValueListenableHandle<T> extends ListenableHandle
   ValueListenableHandle(ValueListenable<T> base) : super(base);
 
   @override
-  T get value => (base as ValueListenable<T>?)!.value;
+  ValueListenable<T>? get base => super.base as ValueListenable<T>?;
+
+  @override
+  T get value => TraceableValueNotifierException.tryReturn(
+      () => BaseAlreadyDisposedException.checkNotDisposed(
+            base,
+            _debugDisposedBase as ValueListenable<T>?,
+            this,
+          ).value,
+      this);
+
+  int get hashCode => _base.hashCode;
+  bool operator ==(other) =>
+      other is ValueListenableHandle<T> && other._base == _base;
+
+  static bool refersToTheSameBase<T>(
+    ValueListenable<T> a,
+    ValueListenable<T> b,
+  ) {
+    if (a is ValueListenableHandle<T> && b is ValueListenableHandle<T>) {
+      return a._base == b._base;
+    }
+    return a == b;
+  }
 
   @override
   ValueNotifierOwnershipFrame get debugOwnershipChainFrame =>
-      ValueNotifierOwnershipFrame(this, 'ValueListenableHandle', false);
+      ValueNotifierOwnershipFrame.handle(this, 'ValueListenableHandle', false);
+
+  @override
+  String toString() =>
+      '${_debugDisposedBase ?? _base}.view(){${valueToStringOrUndefined(this)}';
 }

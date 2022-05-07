@@ -9,7 +9,8 @@ import 'idisposable_change_notifier.dart';
 
 /// An [ValueListenable] which takes an [Stream] and notifies the values, and
 /// throws the errors on it.
-class StreamValueListenable<T> extends IDisposableValueNotifier<T?>
+class StreamValueListenable<T>
+    extends IDisposableValueNotifier<AsyncSnapshot<T>>
     implements DebugValueNotifierOwnershipChainMember {
   final Stream<T> _stream;
   final bool cancelOnError;
@@ -19,7 +20,14 @@ class StreamValueListenable<T> extends IDisposableValueNotifier<T?>
     this._stream, {
     this.cancelOnError = false,
     this.onDone,
-  }) : super(null);
+    bool eager = false,
+  }) : super(eager
+            ? const AsyncSnapshot.waiting()
+            : const AsyncSnapshot.nothing()) {
+    if (eager) {
+      _maybeListenToStream();
+    }
+  }
   bool _didListenToStream = false;
 
   StreamSubscription<T>? _subs;
@@ -71,15 +79,31 @@ class StreamValueListenable<T> extends IDisposableValueNotifier<T?>
 
   bool _disposed = false;
 
+  void _setValue(AsyncSnapshot<T> value) {
+    super.value = value;
+  }
+
+  @override
+  set value(AsyncSnapshot newValue) {
+    throw StateError('protected member!');
+  }
+
   void _onData(T value) {
     if (_disposed) {
       return;
     }
-    this.value = value;
+    _setValue(AsyncSnapshot.withData(
+      ConnectionState.active,
+      value,
+    ));
   }
 
   void _onError(Object error, [StackTrace? trace]) {
-    Error.throwWithStackTrace(error, trace ?? StackTrace.current);
+    _setValue(AsyncSnapshot.withError(
+      cancelOnError ? ConnectionState.done : ConnectionState.active,
+      error,
+      trace ?? StackTrace.current,
+    ));
   }
 
   @override
@@ -103,4 +127,8 @@ class StreamValueListenable<T> extends IDisposableValueNotifier<T?>
   @override
   ValueNotifierOwnershipFrame get debugOwnershipChainFrame =>
       ValueNotifierOwnershipFrame(this, 'StreamValueListenable');
+
+  @override
+  String toString() =>
+      '$_stream.toValueListenable(cancelOnError: $cancelOnError, onDone: $onDone){${valueToStringOrUndefined(this)}}';
 }

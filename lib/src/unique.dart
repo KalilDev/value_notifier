@@ -56,4 +56,8 @@ class UniqueValueListenable<T> extends IDisposableValueNotifier<T>
   @override
   ValueNotifierOwnershipFrame get debugOwnershipChainFrame =>
       ValueNotifierOwnershipFrame(this, 'UniqueValueListenable');
+
+  @override
+  String toString() =>
+      '$_base.unique(${_equals == defaultEquals ? '' : '$_equals'}){${valueToStringOrUndefined(this)}}';
 }

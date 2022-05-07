@@ -11,9 +11,11 @@ class InitialValueListenable<T> extends ValueNotifier<T>
         IDisposableValueListenable<T>,
         DebugValueNotifierOwnershipChainMember {
   final ValueListenableOwnHandle<T> _base;
+  final T? _debugInitial;
 
   InitialValueListenable(ValueListenable<T> base, T initial)
       : _base = ValueListenableOwnHandle(base),
+        _debugInitial = kDebugMode ? initial : null,
         super(initial);
   bool _didListenToBase = false;
   void _maybeListenToBase() {
@@ -49,4 +51,7 @@ class InitialValueListenable<T> extends ValueNotifier<T>
   @override
   ValueNotifierOwnershipFrame get debugOwnershipChainFrame =>
       ValueNotifierOwnershipFrame(this, 'InitialValueListenable');
+  @override
+  String toString() =>
+      '$_base.withInitial($_debugInitial}){${valueToStringOrUndefined(this)}}';
 }

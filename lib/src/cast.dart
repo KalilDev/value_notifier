@@ -22,7 +22,8 @@ class CastValueListenable<T, T1> extends IDisposableValueListenable<T1>
   void removeListener(VoidCallback listener) => _base.removeListener(listener);
 
   @override
-  T1 get value => _base.value as T1;
+  T1 get value =>
+      TraceableValueNotifierException.tryReturn(() => _base.value as T1, this);
 
   @override
   bool get wasDisposed => _base.wasDisposed;
@@ -33,4 +34,7 @@ class CastValueListenable<T, T1> extends IDisposableValueListenable<T1>
   @override
   ValueNotifierOwnershipFrame get debugOwnershipChainFrame =>
       ValueNotifierOwnershipFrame(this, 'CastValueListenable');
+
+  @override
+  String toString() => '$_base.cast<$T>(){${valueToStringOrUndefined(this)}}';
 }
