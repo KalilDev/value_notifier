@@ -114,6 +114,12 @@ abstract class ControllerBase<Self extends ControllerBase<Self>>
 
   T removeSubcontroller<T extends SubcontrollerBase<Self, T>>(T child) =>
       defaultRemoveChild(child);
+
+  void disposeSubcontroller<T extends SubcontrollerBase<Self, T>>(T child) {
+    final removed = removeSubcontroller(child);
+    removed.dispose();
+    assert(removed._debugDisposedParent == this);
+  }
 }
 
 typedef DebugOwnershipRootMixin = DebugChildManagerMixin;
@@ -133,8 +139,13 @@ mixin DebugSingleOwnerManagerMixin on IDisposable
     implements IHaveAnSingleOwner {
   bool? _debugParentManagerDisposed = kDebugMode ? false : null;
   Object? _debugParent;
+  Object? _debugDisposedParent;
   bool _debugSetParent(Object parent) {
     assert(_debugParentManagerDisposed != true && _debugParent == null);
+    assert(() {
+      _debugParent = parent;
+      return true;
+    }());
     return true;
   }
 
@@ -148,8 +159,9 @@ mixin DebugSingleOwnerManagerMixin on IDisposable
   }
 
   void disposeParentManager() {
-    assert(_debugParentManagerDisposed != true && _debugParent != null);
+    assert(_debugParentManagerDisposed != true);
     assert(() {
+      _debugDisposedParent = _debugParent;
       _debugParent = null;
       _debugParentManagerDisposed = true;
       return true;
@@ -196,6 +208,6 @@ abstract class SubcontrollerBase<Parent extends ControllerBase<Parent>,
   Parent? get _debugParent => super._debugParent as Parent?;
   set _debugParent(Object? parent) {
     assert(parent is Parent?);
-    _debugParent = parent as Parent?;
+    super._debugParent = parent as Parent?;
   }
 }
