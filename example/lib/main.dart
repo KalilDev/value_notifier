@@ -1,41 +1,52 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:value_notifier/value_notifier.dart';
+import 'package:value_listenables/value_listenables.dart';
 
 void main() => runApp(MaterialApp(
       home: Home(),
     ));
 
-class TextController {
+class TextController extends ControllerBase<TextController> {
   final rawA = ValueNotifier(1);
-  late final aString = rawA.map((e) => e.toString());
-  late final aText = aString.view().map(Text.new);
+  ValueListenable<String> get aString => rawA.view().map((e) => e.toString());
+  ValueListenable<Text> get aText => aString.map(Text.new);
+
   final b = TextEditingController(text: 'b');
-  late final bString = b.view().map((e) => e.text);
+  ValueListenable<String> get bString => b.view().map((e) => e.text);
+
   final rawC = ValueNotifier(2.0);
-  late final cString = rawC.map((e) => e.toString());
-  late final cText = cString.map(Text.new);
-  late final cSlider = TextController.instance.rawC.view().map(
+  ValueListenable<String> get cString => rawC.view().map((e) => e.toString());
+  ValueListenable<Text> get cText => cString.map(Text.new);
+
+  ValueListenable<Slider> get cSlider => rawC.view().map(
         (e) => Slider(
           value: e,
           min: 0,
           max: 3,
-          onChanged: (v) => TextController.instance.rawC.value = v,
+          onChanged: (v) => rawC.value = v,
         ),
       );
-  late final c =
+
+  ValueListenable<String> get c =>
       rawC.view().map((e) => e * -1).map((e) => e.toStringAsFixed(2));
-  late final text = aString.view().bind(
+
+  ValueListenable<String> get text => aString.view().bind(
       (a) => bString.view().bind((b) => c.view().map((c) => '$a, $b, $c')));
-  late final textWidget = text.map(Text.new);
-  static final instance = TextController();
+  ValueListenable<Text> get textWidget => text.map(Text.new);
+
   void incrementA() => rawA.value = rawA.value + 1;
   void decrementA() => rawA.value = rawA.value - 1;
+
+  void init() {
+    print("init");
+    super.init();
+  }
+
   void dispose() {
-    aString.dispose();
+    print("dispose");
     b.dispose();
     rawC.dispose();
-    bString.dispose();
-    c.dispose();
+    super.dispose();
   }
 }
 
@@ -48,24 +59,34 @@ class Home extends StatelessWidget {
       appBar: AppBar(
         title: Text('Example'),
       ),
-      body: Body(),
+      body: ControllerInjectorBuilder<TextController>(
+        factory: (context) => ControllerBase.create(() => TextController()),
+        builder: (context, controller) => Body(
+          controller: controller,
+        ),
+      ),
     );
   }
 }
 
-class Body extends StatelessWidget {
+class Body extends ControllerWidget<TextController> {
   const Body({
     Key? key,
-  }) : super(key: key);
+    required ControllerHandle<TextController> controller,
+  }) : super(key: key, controller: controller);
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(ControllerContext<TextController> context) {
     return Column(
       children: [
         SizedBox(height: 24),
         Padding(
           padding: const EdgeInsets.all(8.0),
-          child: TextController.instance.textWidget.build(),
+          child: controller.textWidget.build(),
+        ),
+        SizedBox(height: 16),
+        TextField(
+          controller: controller.b,
         ),
         SizedBox(height: 16),
         Expanded(
@@ -76,19 +97,19 @@ class Body extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
                   TextButton(
-                    onPressed: TextController.instance.incrementA,
+                    onPressed: controller.incrementA,
                     child: Text('+'),
                   ),
-                  TextController.instance.aText.build(),
+                  controller.aText.build(),
                   TextButton(
-                    onPressed: TextController.instance.decrementA,
+                    onPressed: controller.decrementA,
                     child: Text('-'),
                   ),
                 ],
               ),
               Text('C:'),
-              TextController.instance.cText.build(),
-              TextController.instance.cSlider.build(),
+              controller.cText.build(),
+              controller.cSlider.build(),
             ],
           ),
         ),
