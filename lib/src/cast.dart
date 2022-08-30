@@ -1,7 +1,7 @@
 import 'package:flutter/foundation.dart';
-import 'package:value_notifier/src/disposable.dart';
-import 'package:value_notifier/src/frame.dart';
-import 'package:value_notifier/src/own_handle.dart';
+import 'package:value_listenables/src/disposable.dart';
+import 'package:value_listenables/src/frame.dart';
+import 'package:value_listenables/src/own_handle.dart';
 
 /// An [ValueListenable] which casts another [ValueListenable]'s value to the
 /// type [T1], and takes the ownership of the parent [ValueListenable].

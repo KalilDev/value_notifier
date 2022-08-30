@@ -1,6 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
-import 'package:value_notifier/src/extensions.dart';
+import 'package:value_listenables/src/extensions.dart';
 
 import '../controller.dart';
 import '../disposable.dart';

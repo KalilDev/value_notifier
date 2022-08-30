@@ -1,5 +1,5 @@
 import 'package:flutter/foundation.dart';
-import 'package:value_notifier/src/frame.dart';
+import 'package:value_listenables/src/frame.dart';
 
 import 'disposable.dart';
 import 'own_handle.dart';

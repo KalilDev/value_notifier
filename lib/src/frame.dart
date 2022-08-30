@@ -1,6 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:meta/meta.dart';
-import 'package:value_notifier/src/disposable.dart';
+import 'package:value_listenables/src/disposable.dart';
 
 class ValueNotifierOwnershipChain {
   final List<ValueNotifierOwnershipFrame> _frames;

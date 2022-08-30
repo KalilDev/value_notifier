@@ -1,5 +1,5 @@
 import 'package:flutter/cupertino.dart';
-import 'package:value_notifier/src/controller.dart';
+import 'package:value_listenables/src/controller.dart';
 
 class InheritedController<T extends ControllerBase<T>> extends InheritedWidget {
   const InheritedController({

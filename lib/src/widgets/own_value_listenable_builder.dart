@@ -1,7 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:value_notifier/src/disposable.dart';
-import 'package:value_notifier/src/handle.dart';
+import 'package:value_listenables/src/disposable.dart';
+import 'package:value_listenables/src/handle.dart';
 
 /// An [ValueListenableBuilder] which takes ownership of the passed
 /// [valueListenable], disposing it when done.

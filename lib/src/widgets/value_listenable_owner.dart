@@ -1,6 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:value_notifier/value_notifier.dart';
+import 'package:value_listenables/value_listenables.dart';
 
 import '../disposable.dart';
 

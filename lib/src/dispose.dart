@@ -1,16 +1,20 @@
 import 'package:flutter/foundation.dart';
-import 'package:value_notifier/src/frame.dart';
-import 'package:value_notifier/src/handle.dart';
+import 'package:value_listenables/src/frame.dart';
+import 'package:value_listenables/src/handle.dart';
 
-import '../value_notifier.dart';
+import '../value_listenables.dart';
 import 'own_handle.dart';
 
-abstract class IDisposableValueListenableProxyBase<T> extends IDisposableBase with DebugValueNotifierOwnershipChainMember implements IDisposableListenable {
+abstract class IDisposableValueListenableProxyBase<T> extends IDisposableBase
+    with DebugValueNotifierOwnershipChainMember
+    implements IDisposableListenable {
   final ValueListenableOwnHandle<T> _base;
 
-  IDisposableValueListenableProxyBase(ValueListenable<T> base) : _base = ValueListenableOwnHandle(base);
+  IDisposableValueListenableProxyBase(ValueListenable<T> base)
+      : _base = ValueListenableOwnHandle(base);
 
-  T get baseValue => TraceableValueNotifierException.tryReturn(() => _base.value, this);
+  T get baseValue =>
+      TraceableValueNotifierException.tryReturn(() => _base.value, this);
 
   @override
   Object? get debugOwnershipChainChild => _base;
@@ -21,7 +25,6 @@ abstract class IDisposableValueListenableProxyBase<T> extends IDisposableBase wi
   @override
   void removeListener(VoidCallback listener) => _base.removeListener(listener);
 
-
   @override
   void dispose() {
     _base.dispose();
@@ -29,13 +32,17 @@ abstract class IDisposableValueListenableProxyBase<T> extends IDisposableBase wi
   }
 }
 
-class AndDisposeValueListenable<T> extends IDisposableValueListenableProxyBase<T> implements IDisposableValueListenable<T> {
+class AndDisposeValueListenable<T>
+    extends IDisposableValueListenableProxyBase<T>
+    implements IDisposableValueListenable<T> {
   final Object _toBeDisposed;
 
-  AndDisposeValueListenable(ValueListenable<T> base, this._toBeDisposed) : super(base);
+  AndDisposeValueListenable(ValueListenable<T> base, this._toBeDisposed)
+      : super(base);
 
   @override
-  ValueNotifierOwnershipFrame get debugOwnershipChainFrame => ValueNotifierOwnershipFrame(this, 'AndDisposeValueListenable');
+  ValueNotifierOwnershipFrame get debugOwnershipChainFrame =>
+      ValueNotifierOwnershipFrame(this, 'AndDisposeValueListenable');
 
   @override
   T get value => baseValue;
@@ -46,15 +53,20 @@ class AndDisposeValueListenable<T> extends IDisposableValueListenableProxyBase<T
     super.dispose();
   }
 }
-class AndDisposeAllValueListenable<T> extends IDisposableValueListenableProxyBase<T> implements IDisposableValueListenable<T> {
+
+class AndDisposeAllValueListenable<T>
+    extends IDisposableValueListenableProxyBase<T>
+    implements IDisposableValueListenable<T> {
   final List<Object> _toBeDisposed;
 
-  AndDisposeAllValueListenable(ValueListenable<T> base, Iterable<Object> toBeDisposed) : 
-  _toBeDisposed=toBeDisposed.toList(),
-  super(base);
+  AndDisposeAllValueListenable(
+      ValueListenable<T> base, Iterable<Object> toBeDisposed)
+      : _toBeDisposed = toBeDisposed.toList(),
+        super(base);
 
   @override
-  ValueNotifierOwnershipFrame get debugOwnershipChainFrame => ValueNotifierOwnershipFrame(this, 'AndDisposeValueListenable');
+  ValueNotifierOwnershipFrame get debugOwnershipChainFrame =>
+      ValueNotifierOwnershipFrame(this, 'AndDisposeValueListenable');
 
   @override
   T get value => baseValue;

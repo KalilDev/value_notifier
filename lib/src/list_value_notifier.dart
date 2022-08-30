@@ -2,7 +2,7 @@ import 'dart:collection';
 import 'dart:math';
 
 import 'package:flutter/foundation.dart';
-import 'package:value_notifier/src/disposable.dart';
+import 'package:value_listenables/src/disposable.dart';
 
 import 'idisposable_change_notifier.dart';
 

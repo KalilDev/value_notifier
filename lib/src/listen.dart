@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:value_notifier/src/frame.dart';
-import 'package:value_notifier/src/handle.dart';
+import 'package:value_listenables/src/frame.dart';
+import 'package:value_listenables/src/handle.dart';
 
 import 'disposable.dart';
 import 'own_handle.dart';

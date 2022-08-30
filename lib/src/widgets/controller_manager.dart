@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:value_notifier/src/widgets/inherited_controller.dart';
-import 'package:value_notifier/value_notifier.dart';
+import 'package:value_listenables/src/widgets/inherited_controller.dart';
+import 'package:value_listenables/value_listenables.dart';
 
 class InheritedControllerInjector<T extends ControllerBase<T>>
     extends StatelessWidget {

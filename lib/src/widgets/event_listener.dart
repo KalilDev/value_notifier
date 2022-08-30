@@ -1,6 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:value_notifier/src/disposable.dart';
+import 'package:value_listenables/src/disposable.dart';
 import '../extensions.dart';
 
 /// Equivalent of calling [ValueListenableE.tap], but automatically handles the

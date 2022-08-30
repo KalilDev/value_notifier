@@ -1,6 +1,6 @@
 import 'package:flutter/foundation.dart';
-import 'package:value_notifier/src/disposable.dart';
-import 'package:value_notifier/src/frame.dart';
+import 'package:value_listenables/src/disposable.dart';
+import 'package:value_listenables/src/frame.dart';
 
 /// An handle to an [Listenable] which takes ownership of the object,
 /// disposing it when done.
